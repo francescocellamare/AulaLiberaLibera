@@ -4,7 +4,7 @@ import * as cheerio from 'cheerio'
 import TelegramBot from "node-telegram-bot-api"
 
 const addr = "https://www.swas.polito.it/dotnet/orari_lezione_pub/RicercaAuleLiberePerFasceOrarie.aspx"
-const BOT_TOKEN = '6101207167:AAHh_YywGPOqmqPXWBPbkNKgkAcj69U8Cbk';
+const BOT_TOKEN = '';
 
 function sendMessageToBot(id, availableList) {
 
