@@ -13,6 +13,7 @@
     "axios": "^1.4.0",
     "cheerio": "^1.0.0-rc.12",
     "node-fetch": "^3.3.1",
-    "node-telegram-bot-api": "^0.61.0"
+    "node-telegram-bot-api": "^0.61.0",
+    "sqlite3": "^5.1.6"
   }
 }

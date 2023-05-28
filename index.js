@@ -2,6 +2,9 @@
 import axios from "axios"
 import * as cheerio from 'cheerio'
 import TelegramBot from "node-telegram-bot-api"
+import sqlite3 from "sqlite3"
+import { newUser, selectLang, updateUser } from "./db.js"
+const dbName = './aule.db'
 
 const addr = "https://www.swas.polito.it/dotnet/orari_lezione_pub/RicercaAuleLiberePerFasceOrarie.aspx"
 const BOT_TOKEN = '6101207167:AAHh_YywGPOqmqPXWBPbkNKgkAcj69U8Cbk';
@@ -10,6 +13,12 @@ const noSlot = 8
 let borraccia = 0
 
 const bot = new TelegramBot(BOT_TOKEN, { polling: true })
+
+const messageSet = {
+    it: ['Benvenuto', 'Aule libere: ', 'nessuna'],
+    en: ['Welcome', 'Available rooms: ', 'none'],
+    pg: ['We u frr', 'Put scij: ', 'nind, vet cult']
+}
 
 function sendMessageToBot(id, message) {
 
@@ -45,7 +54,6 @@ function getRooms(html, index) {
     return $selected
 }
 
-
 //  -------------------------------------------- BOT request ------------------------------------------------
 
 bot.onText(new RegExp('\/now'), async (msg) => {
@@ -53,7 +61,10 @@ bot.onText(new RegExp('\/now'), async (msg) => {
     const html = await fetchOrari()
     const queryResult = getRooms(html, index)
 
-    const message = queryResult.length === 0 ? 'No rooms' : queryResult.join(', ');
+    const language = await selectLang(msg.chat.id)
+
+    let message = `${messageSet[language.lang][1]} ${queryResult.length === 0 ? messageSet[language.lang][2] : queryResult.join(', ')}`;
+    console.log(message)
     sendMessageToBot(msg.chat.id, message);
 })
 
@@ -62,7 +73,7 @@ bot.onText(new RegExp('\/next'), async (msg) => {
     const html = await fetchOrari()
     const queryResult = getRooms(html, index)
 
-    const message = queryResult.length === 0 ? 'No rooms' : queryResult.join(', ');
+    let message = `${messageSet[language.lang][1]} ${queryResult.length === 0 ? messageSet[language.lang][2] : queryResult.join(', ')}`;
     sendMessageToBot(msg.chat.id, message);
 })
 
@@ -119,3 +130,37 @@ bot.onText(new RegExp('\/quante'), async (msg) => {
     
     sendMessageToBot(msg.chat.id, message);
 })
+
+bot.onText(new RegExp('\/start'), async (msg) => {
+    newUser(msg.chat.id)
+    const language = await selectLang(msg.chat.id)
+
+    const message = messageSet[language.lang][0]
+    sendMessageToBot(msg.chat.id, message)
+})
+
+bot.onText(new RegExp('it', 'i'), async (msg) => {
+    updateUser(msg.chat.id, 'it')
+    const message = 'Italiano'
+    sendMessageToBot(msg.chat.id, message)
+})
+bot.onText(new RegExp('en', 'i'), async (msg) => {
+    updateUser(msg.chat.id, 'en')
+    const message = 'English'
+    sendMessageToBot(msg.chat.id, message)
+})
+bot.onText(new RegExp('pg', 'i'), async (msg) => {
+    updateUser(msg.chat.id, 'pg')
+    const message = 'Dialetto'
+    sendMessageToBot(msg.chat.id, message)
+})
+
+// Starting server
+const db = new sqlite3.Database(dbName, (err)=>{
+    if(err) throw err ;
+}) ;
+
+const createTable = 'CREATE TABLE IF NOT EXISTS users (id INTEGER, lang TEXT NOT NULL DEFAULT \'en\', PRIMARY KEY("id")) '
+db.run(createTable)
+
+export default db
