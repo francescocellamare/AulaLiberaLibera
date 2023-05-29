@@ -7,7 +7,7 @@ import { newUser, selectLang, updateUser } from "./db.js"
 const dbName = './aule.db'
 
 const addr = "https://www.swas.polito.it/dotnet/orari_lezione_pub/RicercaAuleLiberePerFasceOrarie.aspx"
-const BOT_TOKEN = '6101207167:AAHh_YywGPOqmqPXWBPbkNKgkAcj69U8Cbk';
+const BOT_TOKEN = '';
 const setOfRooms = ["1", "10", "10A", "10C", "10D", "10I", "11", "11B", "11I", "11S", "11T", "12", "12A", "12D", "12I", "13", "13A", "13B", "13S", "14", "15", "15A", "16", "17", "17A", "19", "19A", "1B", "1I", "1M", "1P", "1S", "2", "21A", "27", "27B", "29", "29B", "2C", "2D", "2I", "2M", "2N", "2P", "3", "3I", "3M", "3N", "3P", "3S", "4", "4C", "4D", "4I", "4M", "4N", "4P", "4T", "5", "5B", "5I", "5M", "5N", "5S", "6", "6C", "6D", "6I", "6N", "7", "7B", "7I", "7N", "7S", "7T", "8", "8C", "8D", "8I", "9B", "9I", "9S", "9T", "R1", "R1b", "R2", "R2b", "R3", "R3b", "R4", "R4b"]
 const noSlot = 8
 let borraccia = 0
