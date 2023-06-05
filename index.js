@@ -17,7 +17,8 @@ const bot = new TelegramBot(BOT_TOKEN, { polling: true })
 const messageSet = {
     it: ['Benvenuto', 'Aule libere: ', 'nessuna'],
     en: ['Welcome', 'Available rooms: ', 'none'],
-    pg: ['We u frr', 'Put scij: ', 'nind, vet cult']
+    pg: ['We u frr', 'Put scij: ', 'nind, vet cult'],
+    ajo: ['Bene bennios', 'iscolas liberas', 'nudda']
 }
 
 function sendMessageToBot(id, message) {
@@ -152,6 +153,12 @@ bot.onText(new RegExp('en', 'i'), async (msg) => {
 bot.onText(new RegExp('pg', 'i'), async (msg) => {
     updateUser(msg.chat.id, 'pg')
     const message = 'Dialetto'
+    sendMessageToBot(msg.chat.id, message)
+})
+
+bot.onText(new RegExp('ajo', 'i'), async (msg) => {
+    updateUser(msg.chat.id, 'ajo')
+    const message = 'Limba Sarda'
     sendMessageToBot(msg.chat.id, message)
 })
 
