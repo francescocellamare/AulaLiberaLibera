@@ -4,10 +4,12 @@ import * as cheerio from 'cheerio'
 import TelegramBot from "node-telegram-bot-api"
 import sqlite3 from "sqlite3"
 import { newUser, selectLang, updateUser } from "./db.js"
+import dayjs from 'dayjs'
+
 const dbName = './aule.db'
 
 const addr = "https://www.swas.polito.it/dotnet/orari_lezione_pub/RicercaAuleLiberePerFasceOrarie.aspx"
-const BOT_TOKEN = '';
+const BOT_TOKEN = '5859751703:AAGXKptx94K78v6EcPDoQqC4niCUBGv5RCQ';
 const setOfRooms = ["1", "10", "10A", "10C", "10D", "10I", "11", "11B", "11I", "11S", "11T", "12", "12A", "12D", "12I", "13", "13A", "13B", "13S", "14", "15", "15A", "16", "17", "17A", "19", "19A", "1B", "1I", "1M", "1P", "1S", "2", "21A", "27", "27B", "29", "29B", "2C", "2D", "2I", "2M", "2N", "2P", "3", "3I", "3M", "3N", "3P", "3S", "4", "4C", "4D", "4I", "4M", "4N", "4P", "4T", "5", "5B", "5I", "5M", "5N", "5S", "6", "6C", "6D", "6I", "6N", "7", "7B", "7I", "7N", "7S", "7T", "8", "8C", "8D", "8I", "9B", "9I", "9S", "9T", "R1", "R1b", "R2", "R2b", "R3", "R3b", "R4", "R4b"]
 const noSlot = 8
 let borraccia = 0
@@ -48,11 +50,18 @@ async function fetchOrari() {
     return html
 }
 
+function getSlotNo() {
+    let hh = dayjs().hours()
+    let mm = dayjs().minute()
+
+    hh = mm - 30 < 0 ? hh-1 : hh
+
+    return hh/1.5
+}
+
 function getRooms(html, index) {
-    const $ = cheerio.load(html);
-    const $selected = $(`[id=Pagina_gv_AuleLibere_lbl_AuleLibere_${index}]`)
-                            .text().split(', ').map(room => room.trim())
-    return $selected
+    const slotNo = getSlotNo()
+    return localData[slotNo+index]
 }
 
 //  -------------------------------------------- BOT request ------------------------------------------------
@@ -62,6 +71,7 @@ bot.onText(new RegExp('\/now'), async (msg) => {
     const html = await fetchOrari()
     const queryResult = getRooms(html, index)
 
+    console.log(now)
     const language = await selectLang(msg.chat.id)
     console.log(msg)
     let message = `${messageSet[language.lang][1]} ${queryResult.length === 0 ? messageSet[language.lang][2] : queryResult.join(', ')}`;
@@ -172,3 +182,4 @@ const createTable = 'CREATE TABLE IF NOT EXISTS users (id INTEGER, lang TEXT NOT
 db.run(createTable)
 
 export default db
+
