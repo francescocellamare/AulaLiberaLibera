@@ -63,7 +63,7 @@ bot.onText(new RegExp('\/now'), async (msg) => {
     const queryResult = getRooms(html, index)
 
     const language = await selectLang(msg.chat.id)
-
+    console.log(msg)
     let message = `${messageSet[language.lang][1]} ${queryResult.length === 0 ? messageSet[language.lang][2] : queryResult.join(', ')}`;
     console.log(message)
     sendMessageToBot(msg.chat.id, message);
@@ -74,6 +74,7 @@ bot.onText(new RegExp('\/next'), async (msg) => {
     const html = await fetchOrari()
     const queryResult = getRooms(html, index)
 
+    const language = await selectLang(msg.chat.id)
     let message = `${messageSet[language.lang][1]} ${queryResult.length === 0 ? messageSet[language.lang][2] : queryResult.join(', ')}`;
     sendMessageToBot(msg.chat.id, message);
 })
