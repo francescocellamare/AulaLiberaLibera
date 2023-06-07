@@ -4,14 +4,15 @@ import * as cheerio from 'cheerio'
 import TelegramBot from "node-telegram-bot-api"
 import sqlite3 from "sqlite3"
 import { newUser, selectLang, updateUser } from "./db.js"
-import dayjs from 'dayjs'
-
+import { readFile } from 'node:fs/promises';
+import dayjs from "./node_modules/dayjs/dayjs.min.js"
 const dbName = './aule.db'
 
 const addr = "https://www.swas.polito.it/dotnet/orari_lezione_pub/RicercaAuleLiberePerFasceOrarie.aspx"
 const BOT_TOKEN = '5859751703:AAGXKptx94K78v6EcPDoQqC4niCUBGv5RCQ';
 const setOfRooms = ["1", "10", "10A", "10C", "10D", "10I", "11", "11B", "11I", "11S", "11T", "12", "12A", "12D", "12I", "13", "13A", "13B", "13S", "14", "15", "15A", "16", "17", "17A", "19", "19A", "1B", "1I", "1M", "1P", "1S", "2", "21A", "27", "27B", "29", "29B", "2C", "2D", "2I", "2M", "2N", "2P", "3", "3I", "3M", "3N", "3P", "3S", "4", "4C", "4D", "4I", "4M", "4N", "4P", "4T", "5", "5B", "5I", "5M", "5N", "5S", "6", "6C", "6D", "6I", "6N", "7", "7B", "7I", "7N", "7S", "7T", "8", "8C", "8D", "8I", "9B", "9I", "9S", "9T", "R1", "R1b", "R2", "R2b", "R3", "R3b", "R4", "R4b"]
-const noSlot = 8
+const noSlot = 8 
+const localData = []
 let borraccia = 0
 
 const bot = new TelegramBot(BOT_TOKEN, { polling: true })
@@ -51,38 +52,38 @@ async function fetchOrari() {
 }
 
 function getSlotNo() {
-    let hh = dayjs().hours()
+    let hh = dayjs().hour()
     let mm = dayjs().minute()
 
     hh = mm - 30 < 0 ? hh-1 : hh
-
-    return hh/1.5
+    if( hh - 8 >= 11)
+        throw new Error('invalid slot')
+    hh = hh-8
+    hh = Math.floor(hh / 1.5)
+    return hh
 }
 
-function getRooms(html, index) {
-    const slotNo = getSlotNo()
+function getRooms(index) {
+    try {
+        const slotNo = getSlotNo()
+    } catch (error) {
+        return ''
+    }
     return localData[slotNo+index]
 }
 
 //  -------------------------------------------- BOT request ------------------------------------------------
 
 bot.onText(new RegExp('\/now'), async (msg) => {
-    const index = 0
-    const html = await fetchOrari()
-    const queryResult = getRooms(html, index)
+    const queryResult = getRooms(0)
 
-    console.log(now)
     const language = await selectLang(msg.chat.id)
-    console.log(msg)
     let message = `${messageSet[language.lang][1]} ${queryResult.length === 0 ? messageSet[language.lang][2] : queryResult.join(', ')}`;
-    console.log(message)
     sendMessageToBot(msg.chat.id, message);
 })
 
 bot.onText(new RegExp('\/next'), async (msg) => {
-    const index = 1
-    const html = await fetchOrari()
-    const queryResult = getRooms(html, index)
+    const queryResult = getRooms(1)
 
     const language = await selectLang(msg.chat.id)
     let message = `${messageSet[language.lang][1]} ${queryResult.length === 0 ? messageSet[language.lang][2] : queryResult.join(', ')}`;
@@ -173,13 +174,35 @@ bot.onText(new RegExp('ajo', 'i'), async (msg) => {
     sendMessageToBot(msg.chat.id, message)
 })
 
+bot.onText(new RegExp('fabri', 'i'), async (msg) => {
+    await bot.sendPhoto(msg.chat.id, 'img1.jpg')
+})
+
+bot.onText(new RegExp('kaffee', 'i'), async (msg) => {
+    await bot.sendAudio(msg.chat.id, 'kaffe.ogg')
+})
+
 // Starting server
 const db = new sqlite3.Database(dbName, (err)=>{
     if(err) throw err ;
 }) ;
 
+async function populateData() {
+    const contents = await readFile('./orari.txt', { encoding: 'utf8' });
+    const lines = contents.split(';').map( str => str.slice(0, str.length - 2))
+    const empty = lines.filter( str => str === '').length
+    for(let i = 0; i < empty; i++) {
+        lines.pop()
+        localData.push('')
+    }
+
+    localData.push(lines)
+}
+
+
 const createTable = 'CREATE TABLE IF NOT EXISTS users (id INTEGER, lang TEXT NOT NULL DEFAULT \'en\', PRIMARY KEY("id")) '
 db.run(createTable)
-
+populateData()
+console.log('Running')
 export default db
 
